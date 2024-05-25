@@ -16,7 +16,7 @@ from .. import loader, utils
 class FeedbackModule(loader.Module):
     """Модуль для отправки сообщения с ссылкой на фидбек."""
 
-    strings = {"name": "Feedback"}
+    strings = {"name": "custom-Feedback"}
 
     @loader.command()
     async def feed(self, message):
