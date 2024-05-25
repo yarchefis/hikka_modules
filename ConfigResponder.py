@@ -12,8 +12,6 @@
 
 import logging
 from telethon.tl.types import Message
-from telethon.tl.functions.messages import GetMessages
-from telethon.tl.types import InputMessageID
 from .. import loader, utils  # type: ignore
 
 logger = logging.getLogger(__name__)
@@ -26,7 +24,7 @@ class MenuButtonMod(loader.Module):
         "name": "MenuButton",
         "menu_message": "Нажмите на кнопку ниже:",
         "choose_action": "Выберите действие:",
-        "warp_not_found": "Файл warp.conf не найден в Избранном.",
+        "hold_message": "Держи!",
     }
 
     async def client_ready(self, client, db):
@@ -52,19 +50,9 @@ class MenuButtonMod(loader.Module):
                 message=message,
                 text=self.strings["choose_action"],
                 reply_markup=[
-                    [{"text": "Конфиг warp", "callback": self.send_warp_config}]
+                    [{"text": "Конфиг warp", "callback": self.send_hold_message}]
                 ],
             )
 
-    async def send_warp_config(self, call):
-        warp_conf_id = None
-
-        async for message in self.client.iter_messages('me', search='warp.conf'):
-            if message.file and message.file.name == 'warp.conf':
-                warp_conf_id = message.id
-                break
-
-        if warp_conf_id:
-            await self.client.forward_messages(call.from_id, [warp_conf_id], 'me')
-        else:
-            await call.answer(self.strings["warp_not_found"], show_alert=True)
+    async def send_hold_message(self, call):
+        await call.answer(self.strings["hold_message"], show_alert=True)
