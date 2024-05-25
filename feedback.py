@@ -22,5 +22,5 @@ class FeedbackModule(loader.Module):
     async def feed(self, message):
         """Отправить сообщение с ссылкой на фидбек"""
         feedback_link = '<a href="http://t.me/hikka_xxbo0l_bot?start=feedback">ссылке</a>'
-        text = f'Вы можете отправить фидбек на {feedback_link}'
+        text = f'Вы можете отправить фидбек перейдя по {feedback_link}'
         await utils.answer(message, text)
