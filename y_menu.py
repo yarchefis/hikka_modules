@@ -23,7 +23,7 @@ class yMenuMod(loader.Module):
 
     strings = {
         "name": "yMenu",
-        "config_response": "Привет, держи конфиг",
+        "config_response": "Найдено совпадение: конфигурационный файл warp. \n Это автоматическое сообщение! Если у тебя есть вопрос просто напиши его:",
         "file_chat_id": -1002244812198,  # ID чата
         "file_message_id": 3,  # ID сообщения
         "spam_wait_time": 60  # Время ожидания в секундах между сообщениями
