@@ -21,7 +21,7 @@ class yMenuMod(loader.Module):
 
     keywords = [
         "конфиг", "кфг", "варп", "config", "warp", "kfg",
-        "конфигурация", "configuration", "конфигурационный", "конфигуратор"
+        "конфигурация", "configuration", "конфигурационный", "конфигуратор", "кoнфиг"
     ]
 
     def __init__(self):
