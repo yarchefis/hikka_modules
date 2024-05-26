@@ -1,16 +1,3 @@
-# ---------------------------------------------------------------------------------
-#  /\_/\  🌐 author web site https://yarchefis.ru/
-# ( o.o )  🔓 Not licensed.
-#  > ^ < 
-# ---------------------------------------------------------------------------------
-# Name: Wiki
-# Description: Модуль для поиска информации на Википедии.
-# Author: yarchefis
-# Commands:
-# .wiki
-# ---------------------------------------------------------------------------------
-
-
 import logging
 import requests
 from telethon import events
@@ -23,10 +10,10 @@ class WikiMod(loader.Module):
     """Модуль для поиска информации на Википедии."""
 
     strings = {
-        "name": "Wiki",
-        "processing": "🔍 Ищем информацию на Википедии...",
-        "not_found": "❌ Информация не найдена.",
-        "error": "⚠️ Произошла ошибка при запросе к Википедии."
+        "name": "WikiMod",
+        "processing": "<emoji document_id=5447410659077661506>🌐</emoji> Ищем информацию на Википедии...",
+        "not_found": "<emoji document_id=5210952531676504517>❌</emoji> Информация не найдена.",
+        "error": "<emoji document_id=5447644880824181073>⚠️</emoji> Произошла ошибка при запросе к Википедии."
     }
 
     async def client_ready(self, client, db):
@@ -37,10 +24,10 @@ class WikiMod(loader.Module):
         """Ищет информацию на Википедии. Использование: .wiki <запрос>"""
         args = utils.get_args_raw(message)
         if not args:
-            await message.reply("❓ Укажите запрос для поиска.")
+            await message.edit("<emoji document_id=5436113877181941026>❓</emoji> Укажите запрос для поиска.")
             return
 
-        await message.reply(self.strings["processing"])
+        await message.edit(self.strings["processing"])
         query = args
         url = f"https://ru.wikipedia.org/w/api.php?action=query&titles={query}&prop=extracts&exintro=true&explaintext=true&format=json"
 
@@ -50,13 +37,13 @@ class WikiMod(loader.Module):
 
             pages = data.get("query", {}).get("pages", {})
             if not pages:
-                await message.reply(self.strings["not_found"])
+                await message.edit(self.strings["not_found"])
                 return
 
             page = next(iter(pages.values()))
             extract = page.get("extract", self.strings["not_found"])
 
-            await message.reply(extract)
+            await message.edit(extract)
         except Exception as e:
             logger.error(f"Error fetching data from Wikipedia: {e}")
-            await message.reply(self.strings["error"])
+            await message.edit(self.strings["error"])
