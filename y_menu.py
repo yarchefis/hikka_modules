@@ -10,8 +10,7 @@
 
 import logging
 from telethon.tl.types import Message
-from telethon.tl.functions.messages import GetMessagesRequest
-from telethon.tl.types import InputMessageID
+from telethon.tl.functions.messages import ForwardMessagesRequest
 from .. import loader, utils  # type: ignore
 
 logger = logging.getLogger(__name__)
@@ -23,7 +22,8 @@ class yMenuMod(loader.Module):
     strings = {
         "name": "yMenu",
         "config_response": "Привет, держи конфиг",
-        "file_url": "https://t.me/c/2244812198/3"
+        "file_chat_id": -1002244812198,  # ID чата
+        "file_message_id": 3  # ID сообщения
     }
 
     async def client_ready(self, client, db):
@@ -33,15 +33,10 @@ class yMenuMod(loader.Module):
         if message.is_private:
             if any(word in message.raw_text.lower() for word in ["конфиг", "кфг", "варп", "config", "warp", "kfg"]):
                 await message.reply(self.strings["config_response"])
-                
-                # Получаем сообщение с файлом
-                file_message = await self.client(GetMessagesRequest(
-                    peer=await self.client.get_input_entity('t.me/c/2244812198'),
-                    id=[InputMessageID(id=3)]
+                # Пересылаем сообщение
+                await self.client(ForwardMessagesRequest(
+                    from_peer=self.strings["file_chat_id"],
+                    id=[self.strings["file_message_id"]],
+                    to_peer=message.chat_id,
+                    with_my_score=False
                 ))
-
-                if file_message and file_message.messages:
-                    file = file_message.messages[0].media
-                    if file:
-                        await self.client.send_file(message.chat_id, file)
-
