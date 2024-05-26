@@ -27,13 +27,22 @@ class yMenuMod(loader.Module):
     def __init__(self):
         self.last_sent = {}  # Словарь для отслеживания времени последней отправки сообщения каждому пользователю
         self.spam_warned = {}  # Словарь для отслеживания предупреждений пользователей
+        self.contacts = []  # Список контактов
 
     async def client_ready(self, client, db):
         self.client = client
         self.me = await client.get_me()  # Получаем информацию о себе
+        self.contacts = await self.client.get_contacts()
 
     async def watcher(self, message: Message):
         if message.is_private and message.sender_id != self.me.id:  # Проверяем, что сообщение не от самого себя
+            # Проверяем, есть ли отправитель в контактах
+            sender_in_contacts = any(
+                contact.user_id == message.sender_id for contact in self.contacts
+            )
+            if sender_in_contacts:
+                return  # Не отвечаем, если отправитель в контактах
+
             # Проверяем время между отправками сообщений
             now = time()
             if message.sender_id in self.last_sent and now - self.last_sent[message.sender_id] <= self.strings["spam_wait_time"]:
