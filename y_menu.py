@@ -11,7 +11,6 @@
 import logging
 from telethon.tl.types import Message
 from telethon.tl.functions.messages import ForwardMessagesRequest
-from telethon.tl.functions.users import GetFullUserRequest
 from .. import loader, utils  # type: ignore
 from time import time
 
@@ -24,13 +23,15 @@ class yMenuMod(loader.Module):
     strings = {
         "name": "yMenu",
         "config_response": "Найдено совпадение: конфигурационный файл warp. \n Это автоматическое сообщение! Если у тебя есть вопрос просто напиши его:",
+        "spam_warning": "Пожалуйста, не спамьте. Подождите немного перед повторной отправкой сообщения.",
         "file_chat_id": -1002244812198,  # ID чата
         "file_message_id": 3,  # ID сообщения
-        "spam_wait_time": 60  # Время ожидания в секундах между сообщениями
+        "spam_wait_time": 20  # Время ожидания в секундах между сообщениями
     }
 
     def __init__(self):
         self.last_sent = {}  # Словарь для отслеживания времени последней отправки сообщения каждому пользователю
+        self.spam_warned = {}  # Словарь для отслеживания предупреждений пользователей
 
     async def client_ready(self, client, db):
         self.client = client
@@ -45,6 +46,7 @@ class yMenuMod(loader.Module):
                 now = time()
                 if message.sender_id not in self.last_sent or now - self.last_sent[message.sender_id] > self.strings["spam_wait_time"]:
                     self.last_sent[message.sender_id] = now
+                    self.spam_warned.pop(message.sender_id, None)  # Сбрасываем предупреждение при успешной отправке
                     await message.reply(self.strings["config_response"])
                     # Пересылаем сообщение
                     await self.client(ForwardMessagesRequest(
@@ -54,4 +56,7 @@ class yMenuMod(loader.Module):
                         with_my_score=False
                     ))
                 else:
+                    if message.sender_id not in self.spam_warned:
+                        self.spam_warned[message.sender_id] = True
+                        await message.reply(self.strings["spam_warning"])
                     logger.info(f"Spam protection: Ignored message from {message.sender_id}")
