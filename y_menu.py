@@ -38,7 +38,10 @@ class yMenuMod(loader.Module):
 
     async def watcher(self, message: Message):
         if message.is_private and message.sender_id != self.me.id:  # Проверяем, что сообщение не от самого себя
-            if any(word in message.raw_text.lower() for word in ["конфиг", "кфг", "варп", "config", "warp", "kfg"]):
+            if any(word in message.raw_text.lower() for word in [
+                "конфиг", "кфг", "варп", "config", "warp", "kfg",
+                "конфигурация", "configuration", "конфигурационный", "конфигуратор"
+            ]):
                 now = time()
                 if message.sender_id not in self.last_sent or now - self.last_sent[message.sender_id] > self.strings["spam_wait_time"]:
                     self.last_sent[message.sender_id] = now
@@ -52,4 +55,3 @@ class yMenuMod(loader.Module):
                     ))
                 else:
                     logger.info(f"Spam protection: Ignored message from {message.sender_id}")
-
