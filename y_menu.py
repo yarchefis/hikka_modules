@@ -27,49 +27,35 @@ class yMenuMod(loader.Module):
     def __init__(self):
         self.last_sent = {}  # Словарь для отслеживания времени последней отправки сообщения каждому пользователю
         self.spam_warned = {}  # Словарь для отслеживания предупреждений пользователей
-        self.contacts = []  # Список контактов
 
     async def client_ready(self, client, db):
         self.client = client
         self.me = await client.get_me()  # Получаем информацию о себе
-        self.contacts = await self.client.get_contacts()
 
     async def watcher(self, message: Message):
         if message.is_private and message.sender_id != self.me.id:  # Проверяем, что сообщение не от самого себя
-            # Проверяем, есть ли отправитель в контактах
-            sender_in_contacts = any(
-                contact.user_id == message.sender_id for contact in self.contacts
-            )
-            if sender_in_contacts:
-                return  # Не отвечаем, если отправитель в контактах
-
-            # Проверяем время между отправками сообщений
-            now = time()
-            if message.sender_id in self.last_sent and now - self.last_sent[message.sender_id] <= self.strings["spam_wait_time"]:
-                if message.sender_id not in self.spam_warned:
-                    self.spam_warned[message.sender_id] = True
-                    await message.reply(self.strings["spam_warning"])
-                logger.info(f"Spam protection: Ignored message from {message.sender_id}")
-                return
-
-            # Обновляем время последней отправки
-            self.last_sent[message.sender_id] = now
-            self.spam_warned.pop(message.sender_id, None)  # Сбрасываем предупреждение при успешной отправке
-
-            # Проверяем наличие ключевых слов
             for keyword in self.keywords:
                 if keyword in message.raw_text.lower():
-                    await message.reply(self.strings["config_response"])
-                    # Пересылаем сообщение
-                    await self.client(ForwardMessagesRequest(
-                        from_peer=self.strings["file_chat_id"],
-                        id=[self.strings["file_message_id"]],
-                        to_peer=message.chat_id,
-                        with_my_score=False
-                    ))
-                    break
+                    now = time()
+                    if message.sender_id not in self.last_sent or now - self.last_sent[message.sender_id] > self.strings["spam_wait_time"]:
+                        self.last_sent[message.sender_id] = now
+                        self.spam_warned.pop(message.sender_id, None)  # Сбрасываем предупреждение при успешной отправке
+                        await message.reply(self.strings["config_response"])
+                        # Пересылаем сообщение
+                        await self.client(ForwardMessagesRequest(
+                            from_peer=self.strings["file_chat_id"],
+                            id=[self.strings["file_message_id"]],
+                            to_peer=message.chat_id,
+                            with_my_score=False
+                        ))
+                    else:
+                        if message.sender_id not in self.spam_warned:
+                            self.spam_warned[message.sender_id] = True
+                            await message.reply(self.strings["spam_warning"])
+                        logger.info(f"Spam protection: Ignored message from {message.sender_id}")
 
-            # Отправляем подтверждение о прочтении
-            await message.client.send_read_acknowledge(
-                message.chat_id, clear_mentions=True
-            )
+                    # Отправляем подтверждение о прочтении
+                    await message.client.send_read_acknowledge(
+                        message.chat_id, clear_mentions=True
+                    )
+                    break
