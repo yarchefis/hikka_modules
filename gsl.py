@@ -23,12 +23,14 @@ class VoiceLinkMod(loader.Module):
         if message.is_reply and message.reply_to_msg_id:
             reply_message = await message.get_reply_message()
             if reply_message.voice:
-                voice_msg = reply_message.voice
                 # Формируем ссылку на голосовое сообщение
-                voice_link = f"https://t.me/c/{voice_msg.chat_id}/{voice_msg.id}"
-                await message.reply(f"🔊 [Голосовое сообщение]({voice_link})")
+                chat_id = reply_message.chat_id
+                message_id = reply_message.id
+                if str(chat_id).startswith('-100'):
+                    chat_id = str(chat_id)[4:]
+                voice_link = f"https://t.me/c/{chat_id}/{message_id}"
+                await message.edit(f"🔊 [Голосовое сообщение]({voice_link})")
             else:
-                await message.reply(self.strings["no_voice_message"])
+                await message.edit(self.strings["no_voice_message"])
         else:
-            await message.reply(self.strings["no_voice_message"])
-
+            await message.edit(self.strings["no_voice_message"])
