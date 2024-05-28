@@ -10,7 +10,7 @@ class VoiceLinkMod(loader.Module):
 
     strings = {
         "name": "VoiceLinkMod",
-        "no_voice_message": "⚠️ Это не голосовое сообщение. Ответьте на голосовое сообщение, чтобы получить ссылку на него."
+        "no_voice_message": "⚠️ Это не голосовое сообщение! Ответьте на голосовое сообщение, чтобы получить ссылку на него."
     }
 
     async def client_ready(self, client, db):
