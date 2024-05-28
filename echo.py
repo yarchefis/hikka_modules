@@ -20,16 +20,22 @@ class EchoMod(loader.Module):
     @loader.ratelimit
     async def echocmd(self, message):
         """Редактировать сообщение на предыдущее сообщение в чате."""
-        chat = await message.get_chat()
-        # Получаем список сообщений, включая текущее сообщение
-        async for msg in self.client.iter_messages(chat.id, limit=2):
-            if msg.id != message.id:
-                previous_message = msg
-                break
+        if message.is_reply:
+            # Если команда используется в ответ на сообщение, используем текст этого сообщения
+            reply_message = await message.get_reply_message()
+            text_to_echo = reply_message.raw_text
         else:
-            previous_message = None
+            # Получаем предыдущее сообщение в чате
+            chat = await message.get_chat()
+            async for msg in self.client.iter_messages(chat.id, limit=2):
+                if msg.id != message.id:
+                    text_to_echo = msg.raw_text
+                    break
+            else:
+                text_to_echo = None
 
-        if previous_message:
-            await message.edit(previous_message.raw_text)
+        if text_to_echo:
+            # Оборачиваем текст в кавычки и редактируем сообщение
+            await message.edit(f"\"{text_to_echo}\"")
         else:
             await message.edit(self.strings["no_previous_message"])
