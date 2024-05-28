@@ -25,14 +25,14 @@ class VoiceLinkMod(loader.Module):
             reply_message = await message.get_reply_message()
             if reply_message.voice:
                 # Скачиваем голосовое сообщение
-                file_path = await self.client.download_media(reply_message, file=bytes)
+                file_path = await self.client.download_media(reply_message, file="voice_note.ogg")
 
                 # Отправляем голосовое сообщение обратно в чат
                 await self.client.send_file(
                     message.chat_id,
                     file_path,
                     voice_note=True,
-                    attributes=[DocumentAttributeAudio(duration=reply_message.voice.attributes[0].duration)]
+                    attributes=reply_message.document.attributes
                 )
 
                 await message.delete()
