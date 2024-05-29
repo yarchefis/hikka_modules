@@ -71,8 +71,8 @@ class yMenuMod(loader.Module):
                     break
 
     @loader.command()
-    async def feed(self, message):
-        """мета"""
+    async def meta(self, message):
+        """мета команда"""
         meta_link = '<a href="http://nometa.xyz">перейди по ссылке и изучи!</a>'
         text = f'Пожалуйста, не задавайте мета вопросы! {meta_link}'
         await utils.answer(message, text)
