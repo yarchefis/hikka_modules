@@ -1,3 +1,13 @@
+# ---------------------------------------------------------------------------------
+#  /\_/\  🌐 author web site https://yarchefis.ru
+# ( o.o )  🔓 Not licensed.
+#  > ^ <  
+# ---------------------------------------------------------------------------------
+# Name: yMenu
+# Description: Модуль личный помощник.
+# Author: yarchefis
+# ---------------------------------------------------------------------------------
+
 import logging
 from telethon.tl.types import Message
 from telethon.tl.functions.messages import ForwardMessagesRequest
@@ -14,6 +24,7 @@ class yMenuMod(loader.Module):
         "name": "yMenu",
         "config_response": "Держи конфиг. Обрати внимание это автоматическое сообщение. Если у тебя есть вопрос, просто напиши его.\n Пожалуйста, не задавайте мета вопросы! Изучи: http://nometa.xyz <emoji document_id=5274196681024348149>😊</emoji>",
         "spam_warning": "<emoji document_id=5447644880824181073>⚠️</emoji> Пожалуйста, не спамьте. Подождите немного перед повторной отправкой сообщения. <emoji document_id=5386367538735104399>⌛</emoji>",
+        "meta_message": "Пожалуйста, не задавайте мета вопросы! Изучи: http://nometa.xyz",
         "file_chat_id": -1002244812198,  # ID чата
         "file_message_id": 3,  # ID сообщения
         "spam_wait_time": 20  # Время ожидания в секундах между сообщениями
@@ -59,3 +70,8 @@ class yMenuMod(loader.Module):
                         message.chat_id, clear_mentions=True
                     )
                     break
+
+    @loader.unrestricted
+    async def metacmd(self, message: Message):
+        """Редактирует сообщение с мета вопросами."""
+        await message.edit(self.strings["meta_message"])
