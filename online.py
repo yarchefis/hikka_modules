@@ -4,7 +4,7 @@ from asyncio import sleep
 @loader.tds
 class OnlineMod(loader.Module):
     """Вечный онлайн."""
-    strings = {'name': 'Eternal Online'}
+    strings = {'name': 'Online'}
 
     async def client_ready(self, client, db):
         self.db = db
