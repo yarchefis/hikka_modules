@@ -2,7 +2,7 @@ from .. import loader
 from asyncio import sleep
 
 @loader.tds
-class EternalOnlineMod(loader.Module):
+class OnlineMod(loader.Module):
     """Вечный онлайн."""
     strings = {'name': 'Eternal Online'}
 
@@ -14,10 +14,10 @@ class EternalOnlineMod(loader.Module):
         if not self.db.get("Eternal Online", "status"):
             self.db.set("Eternal Online", "status", True)
             await message.edit("Вечный онлайн включен.")
-            while self.db.get("Eternal Online", "status"):
+            while self.db.get("Online", "status"):
                 await message.client(__import__("telethon").functions.account.UpdateStatusRequest(offline=False))
-                await sleep(50)
+                await sleep(40)
 
         else:
-            self.db.set("Eternal Online", "status", False)
+            self.db.set("Online", "status", False)
             await message.edit("Вечный онлайн выключен.")
