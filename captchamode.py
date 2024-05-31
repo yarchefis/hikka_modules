@@ -16,10 +16,14 @@ class AutoMessageMod(loader.Module):
         self.target_chat = -1001234567890
 
         # Регистрируем событие для отслеживания присоединения пользователей
-        self.client.add_event_handler(self.user_joined, events.ChatAction(func=lambda e: e.user_joined and e.chat_id == self.target_chat))
+        self.client.add_event_handler(self.user_joined, events.NewMessage(incoming=True, chats=[self.target_chat]))
 
     async def user_joined(self, event):
         try:
+            message = event.message
+            if message.user_id != event.chat_id:
+                return
+
             user = await event.get_user()
             user_id = user.id
 
@@ -30,7 +34,3 @@ class AutoMessageMod(loader.Module):
 
         except Exception as e:
             logger.error(f"Ошибка при обработке присоединения пользователя: {e}")
-
-    async def shutdown(self):
-        # Удаляем обработчик событий при завершении модуля
-        self.client.remove_event_handler(self.user_joined)
