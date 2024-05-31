@@ -1,50 +1,57 @@
-# ---------------------------------------------------------------------------------
-#  /\_/\  🌐 This module was loaded through https://t.me/hikkamods_bot
-# ( o.o )  🔐 Licensed under the GNU AGPLv3.
-#  > ^ <   ⚠️ Owner of heta.hikariatama.ru doesn't take any responsibilities or intellectual property rights regarding this script
-# ---------------------------------------------------------------------------------
-# Name: CaptchaModerator
-# Author: OpenAI
-# Description: Mutes new users in a specific chat until they confirm a captcha.
-# Commands:
-#   None
-# ---------------------------------------------------------------------------------
+import logging
+from telethon import events
 
-from telethon import events, Button
-from telethon.tl.functions.channels import EditBannedRequest
-from telethon.tl.types import ChatBannedRights
 from .. import loader, utils
 
-class CaptchaModeratorMod(loader.Module):
-    """Mutes new users in a specific chat until they confirm a captcha"""
+logger = logging.getLogger(__name__)
 
-    strings = {"name": "CaptchaModerator"}
+@loader.tds
+class AutoMuteMod(loader.Module):
+    """Модуль для автоматического выдачи мута при присоединении пользователей"""
 
     async def client_ready(self, client, db):
         self.client = client
+        self.db = db
 
-    @loader.tds
-    async def watcher(self, message):
-        chat_id = -1002030594496  # Replace with the target chat ID
+        # Идентификатор чата, который будем отслеживать (замените на свой)
+        self.target_chat = -1001234567890
 
-        if message.chat_id != chat_id:
-            return
+        # Регистрируем событие для отслеживания присоединения пользователей
+        self.client.add_event_handler(self.user_joined, events.UserJoined(chats=[self.target_chat]))
 
-        if message.user_joined or message.user_added:
-            user_id = message.action_message.from_id if message.user_joined else message.action_message.added_by
-            mute_rights = ChatBannedRights(until_date=None, send_messages=True)
-            await self.client(EditBannedRequest(chat_id, user_id, mute_rights))
+    async def user_joined(self, event):
+        try:
+            user = await event.get_user()
+            user_id = user.id
 
-            button = [Button.inline("Подтверди капчу", b"captcha_confirm")]
-            await self.client.send_message(chat_id, "Подтверди капчу", buttons=button, reply_to=message.id)
+            # Проверяем, является ли пользователь администратором
+            is_admin = await utils.is_user_admin(self.client, self.target_chat, user_id)
 
-    @loader.callback_handler()
-    async def captcha_callback(self, event):
-        if event.data != b"captcha_confirm":
-            return
+            # Если пользователь не администратор, выдаем ему мут
+            if not is_admin:
+                await self.client.edit_permissions(self.target_chat, user_id, send_messages=False)
+                logger.info(f"Выдан мут пользователю {user_id}")
 
-        user_id = event.sender_id
-        chat_id = event.chat_id
-        unmute_rights = ChatBannedRights(until_date=None, send_messages=False)
-        await self.client(EditBannedRequest(chat_id, user_id, unmute_rights))
-        await event.edit("Капча подтверждена. Вы размучены.")
+        except Exception as e:
+            logger.error(f"Ошибка при обработке присоединения пользователя: {e}")
+
+    async def shutdown(self):
+        # Удаляем обработчик событий при завершении модуля
+        self.client.remove_event_handler(self.user_joined)
+
+    async def mutecmd(self, message):
+        """Команда для выдачи мута пользователю вручную"""
+        target_chat = self.target_chat
+        args = utils.get_args_raw(message)
+
+        if args:
+            try:
+                user_id = int(args)
+                await self.client.edit_permissions(target_chat, user_id, send_messages=False)
+                await message.edit(f"Пользователь с ID {user_id} получил мут в чате.")
+            except ValueError:
+                await message.edit("Неверный формат ID пользователя.")
+            except Exception as e:
+                await message.edit(f"Произошла ошибка: {e}")
+        else:
+            await message.edit("Укажите ID пользователя для выдачи мута.")
