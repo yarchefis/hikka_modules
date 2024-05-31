@@ -1,6 +1,5 @@
 import logging
 from telethon import events
-
 from .. import loader, utils
 
 logger = logging.getLogger(__name__)
@@ -17,7 +16,7 @@ class AutoMuteMod(loader.Module):
         self.target_chat = -1001234567890
 
         # Регистрируем событие для отслеживания присоединения пользователей
-        self.client.add_event_handler(self.user_joined, events.UserJoined(chats=[self.target_chat]))
+        self.client.add_event_handler(self.user_joined, events.ChatAction(func=lambda e: e.user_joined and e.chat_id == self.target_chat))
 
     async def user_joined(self, event):
         try:
