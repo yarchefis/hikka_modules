@@ -1,9 +1,9 @@
 from telethon import events
 from telethon.tl.functions.messages import EditChatDefaultBannedRightsRequest
 from telethon.tl.types import ChatBannedRights
+import time
 
 from .. import loader, utils
-
 
 @loader.tds
 class MuteOnJoinMod(loader.Module):
@@ -11,7 +11,7 @@ class MuteOnJoinMod(loader.Module):
 
     strings = {
         "name": "MuteOnJoin",
-        "mute_msg": "🤫 Добро пожаловать! Вы были заглушены на 1 минуту.",
+        "mute_msg": "🤫 Добро пожаловать! Вы были заглушены на 1 минуту..",
         "mute_in_chat": "✅ Заглушение при входе включено в этом чате.",
         "unmute_in_chat": "🚫 Заглушение при входе выключено в этом чате.",
         "no_perms": "🤷‍♂️ У меня нет прав для заглушения пользователей в этом чате.",
@@ -20,7 +20,8 @@ class MuteOnJoinMod(loader.Module):
     async def client_ready(self, client, db):
         self._client = client
         self._db = db
-        self._muted_chats = set(db.get("muteonjoin_chats", []))
+        muted_chats = db.get("muteonjoin_chats")
+        self._muted_chats = set(muted_chats) if muted_chats else set()
 
     async def on_unload(self):
         self._db.set("muteonjoin_chats", list(self._muted_chats))
@@ -85,7 +86,7 @@ class MuteOnJoinMod(loader.Module):
                         EditChatDefaultBannedRightsRequest(
                             chat_id,
                             ChatBannedRights(
-                                until_date=time.time() + 60,
+                                until_date=time.time() + self.config["mute_duration"],
                                 send_messages=True,
                             ),
                             user_id,
