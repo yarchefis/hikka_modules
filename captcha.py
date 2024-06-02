@@ -1,23 +1,12 @@
-# ---------------------------------------------------------------------------------
-#  /\_/\  🌐 Этот модуль был загружен через https://t.me/hikkamods_bot
-# ( o.o )  🔐 Лицензирован под GNU AGPLv3.
-#  > ^ <   ⚠️ Владелец heta.hikariatama.ru не несет ответственности или интеллектуальных прав на этот скрипт
-# ---------------------------------------------------------------------------------
-# Name: MuteNewUsers
-# Author: OpenAI
-# Description: Модуль для автоматического заглушения новых пользователей в чате
-# Commands:
-#   mutein - подписывает/отписывает данный чат для наблюдения
-# ---------------------------------------------------------------------------------
-
 from telethon import events, Button
 from telethon.tl.functions.channels import EditBannedRequest
 from telethon.tl.types import ChatBannedRights
 from .. import loader, utils
 
+@loader.tds
 class MuteNewUsersMod(loader.Module):
     """Модуль для автоматического заглушения новых пользователей в чате"""
-
+    
     strings = {"name": "MuteNewUsers"}
 
     async def client_ready(self, client, db):
@@ -31,8 +20,8 @@ class MuteNewUsersMod(loader.Module):
         button = [Button.inline("Подтвердите, что вы не бот", b"captcha_confirm")]
         await self.client.send_message(chat_id, "Вы были заглушены. Подтвердите, что вы не бот.", buttons=button)
 
-    @loader.tds
-    async def muteincmd(self, message):
+    @loader.command
+    async def mutein(self, message):
         """Подписывает/отписывает данный чат для наблюдения"""
         chat_id = utils.get_chat_id(message)
         if chat_id in self.muted_chats:
@@ -44,13 +33,13 @@ class MuteNewUsersMod(loader.Module):
             self.db.set(self.strings["name"], "muted_chats", self.muted_chats)
             await message.edit("<b>Чат добавлен в список наблюдения.</b>")
 
-    @loader.tds
+    @loader.watcher(out=False, in=True)
     async def watcher(self, message):
         if message.chat_id not in self.muted_chats:
             return
 
-        if message.user_joined or message.user_added:
-            user_id = message.action_message.from_id if message.user_joined else message.action_message.added_by
+        if getattr(message, "user_joined", False) or getattr(message, "user_added", False):
+            user_id = message.from_id if message.user_joined else message.action_message.added_by
             await self.mute_user(message.chat_id, user_id)
 
     @loader.callback_handler()
