@@ -3,13 +3,10 @@ from telethon.tl.types import Message
 from telethon.tl.functions.messages import ForwardMessagesRequest
 from .. import loader, utils  # type: ignore
 from time import time
-
 logger = logging.getLogger(__name__)
-
 @loader.tds
 class yMenuMod(loader.Module):
     """Модуль личный помощник."""
-
     strings = {
         "name": "yMenu",
         "config_response": "Держи конфиг. Обрати внимание это автоматическое сообщение. Если у тебя есть вопрос, просто напиши его.\n Пожалуйста, не задавайте мета вопросы! Изучи: http://nometa.xyz <emoji document_id=5274196681024348149>😊</emoji>",
@@ -18,20 +15,16 @@ class yMenuMod(loader.Module):
         "file_message_id": 6,  # ID сообщения
         "spam_wait_time": 20  # Время ожидания в секундах между сообщениями
     }
-
     keywords = [
         "конфиг", "кфг", "варп", "config", "warp", "kfg",
         "конфигурация", "configuration", "конфигурационный", "конфигуратор", "кoнфиг", "kфг"
     ]
-
     def __init__(self):
         self.last_sent = {}  # Словарь для отслеживания времени последней отправки сообщения каждому пользователю
         self.spam_warned = {}  # Словарь для отслеживания предупреждений пользователей
-
     async def client_ready(self, client, db):
         self.client = client
         self.me = await client.get_me()  # Получаем информацию о себе
-
     async def watcher(self, message: Message):
         if message.is_private and message.sender_id != self.me.id:  # Проверяем, что сообщение не от самого себя
             for keyword in self.keywords:
@@ -53,13 +46,11 @@ class yMenuMod(loader.Module):
                             self.spam_warned[message.sender_id] = True
                             await message.reply(self.strings["spam_warning"])
                         logger.info(f"Spam protection: Ignored message from {message.sender_id}")
-
-                    # Отправляем подтверждение о прочтении
+                    # Отправляем подтверждение о прочтении/
                     await message.client.send_read_acknowledge(
                         message.chat_id, clear_mentions=True
                     )
                     break
-
     @loader.command()
     async def meta(self, message: Message):
         """мета команда"""
