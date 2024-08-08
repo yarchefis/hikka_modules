@@ -3,6 +3,7 @@ from telethon.tl.types import Message
 from telethon.tl.functions.messages import ForwardMessagesRequest
 from .. import loader, utils  # type: ignore
 from time import time
+import difflib  # Для работы с похожестью строк
 
 logger = logging.getLogger(__name__)
 
@@ -32,33 +33,40 @@ class yMenuMod(loader.Module):
         self.client = client
         self.me = await client.get_me()  # Получаем информацию о себе
 
+    def is_keyword_match(self, text):
+        """Проверка на соответствие текста любому из ключевых слов с учетом опечаток."""
+        for keyword in self.keywords:
+            # Используем difflib для поиска похожих слов с порогом похожести
+            if difflib.SequenceMatcher(None, keyword, text).ratio() > 0.8:
+                return True
+        return False
+
     async def watcher(self, message: Message):
         if message.is_private and message.sender_id != self.me.id:  # Проверяем, что сообщение не от самого себя
-            for keyword in self.keywords:
-                if keyword in message.raw_text.lower():
-                    now = time()
-                    if message.sender_id not in self.last_sent or now - self.last_sent[message.sender_id] > self.strings["spam_wait_time"]:
-                        self.last_sent[message.sender_id] = now
-                        self.spam_warned.pop(message.sender_id, None)  # Сбрасываем предупреждение при успешной отправке
-                        await message.reply(self.strings["config_response"])
-                        # Пересылаем сообщение
-                        await self.client(ForwardMessagesRequest(
-                            from_peer=self.strings["file_chat_id"],
-                            id=[self.strings["file_message_id"]],
-                            to_peer=message.chat_id,
-                            with_my_score=False
-                        ))
-                    else:
-                        if message.sender_id not in self.spam_warned:
-                            self.spam_warned[message.sender_id] = True
-                            await message.reply(self.strings["spam_warning"])
-                        logger.info(f"Spam protection: Ignored message from {message.sender_id}")
+            message_text = message.raw_text.lower()
+            if self.is_keyword_match(message_text):
+                now = time()
+                if message.sender_id not in self.last_sent or now - self.last_sent[message.sender_id] > self.strings["spam_wait_time"]:
+                    self.last_sent[message.sender_id] = now
+                    self.spam_warned.pop(message.sender_id, None)  # Сбрасываем предупреждение при успешной отправке
+                    await message.reply(self.strings["config_response"])
+                    # Пересылаем сообщение
+                    await self.client(ForwardMessagesRequest(
+                        from_peer=self.strings["file_chat_id"],
+                        id=[self.strings["file_message_id"]],
+                        to_peer=message.chat_id,
+                        with_my_score=False
+                    ))
+                else:
+                    if message.sender_id not in self.spam_warned:
+                        self.spam_warned[message.sender_id] = True
+                        await message.reply(self.strings["spam_warning"])
+                    logger.info(f"Spam protection: Ignored message from {message.sender_id}")
 
-                    # Отправляем подтверждение о прочтении
-                    await message.client.send_read_acknowledge(
-                        message.chat_id, clear_mentions=True
-                    )
-                    break
+                # Отправляем подтверждение о прочтении
+                await message.client.send_read_acknowledge(
+                    message.chat_id, clear_mentions=True
+                )
 
     @loader.command()
     async def meta(self, message: Message):
