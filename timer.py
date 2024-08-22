@@ -35,6 +35,6 @@ class TimerMod(loader.Module):
         while datetime.now() < end_time:
             remaining_time = end_time - datetime.now()
             await message.edit(f"⏳ Осталось времени: {str(remaining_time).split('.')[0]}")  # Отображаем без микросекунд
-            await asyncio.sleep(5)
+            await asyncio.sleep(2)
 
         await message.edit(self.strings["time_up"])
