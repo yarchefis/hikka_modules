@@ -1,5 +1,4 @@
 import logging
-import re
 import requests
 from telethon.tl.types import Message
 from .. import loader, utils  # type: ignore
@@ -13,7 +12,8 @@ class TranslationHandlerMod(loader.Module):
         "name": "TranslationHandler"
     }
 
-    special_letters = "Ғғ Җ җ Ҙҙ Ҡҡ ң Өө ҫ Үү Һһ Әә"
+    # Список букв в обоих регистрах
+    special_letters = "ғ Ғ җ Җ ҙ Ҙ ҡ Ҡ ң Ң ө Ө ҫ Ҫ ү Ү Һ ә Ә"
     chat_id = 831408739
     api_url = "https://api.mymemory.translated.net/get"
 
@@ -33,24 +33,3 @@ class TranslationHandlerMod(loader.Module):
                 translated_text = response.get('responseData', {}).get('translatedText', None)
                 if translated_text:
                     await message.reply(translated_text)
-            else:
-                # Берем первые два слова и определяем язык
-                first_two_words = ' '.join(text.split()[:2])
-                response = requests.get(self.api_url, params={
-                    'q': first_two_words,
-                    'langpair': 'autodetect|ru'
-                }).json()
-                detected_language = response.get('responseData', {}).get('detectedLanguage', 'unknown')
-
-                if detected_language in ['ba', 'tt']:
-                    # Переводим весь текст, но сохраняем язык tt
-                    response = requests.get(self.api_url, params={
-                        'q': text,
-                        'langpair': 'tt|ru'
-                    }).json()
-                    translated_text = response.get('responseData', {}).get('translatedText', None)
-                    if translated_text:
-                        await message.reply(translated_text)
-                else:
-                    # Иначе не отвечаем
-                    pass
