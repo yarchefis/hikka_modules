@@ -3,7 +3,9 @@ from telethon.tl.types import Message
 from telethon.tl.functions.messages import ForwardMessagesRequest
 from .. import loader, utils  # type: ignore
 from time import time
+
 logger = logging.getLogger(__name__)
+
 @loader.tds
 class yMenuMod(loader.Module):
     """Модуль личный помощник."""
@@ -13,18 +15,23 @@ class yMenuMod(loader.Module):
         "spam_warning": "<emoji document_id=5447644880824181073>⚠️</emoji> Пожалуйста, не спамьте. Подождите немного перед повторной отправкой сообщения. <emoji document_id=5386367538735104399>⌛</emoji>",
         "file_chat_id": -1002163297996,  # ID чата
         "file_message_id": 6,  # ID сообщения
-        "spam_wait_time": 20  # Время ожидания в секундах между сообщениями
+        "spam_wait_time": 20,  # Время ожидания в секундах между сообщениями
+        "support_message": "Я стараюсь для вас как могу! Если хочешь меня поддержать, буду очень рад. Вот ссылка: https://yarchefis.github.io/donation-page/"
     }
+
     keywords = [
         "конфиг", "кфг", "варп", "config", "warp", "kfg",
         "конфигурация", "configuration", "конфигурационный", "конфигуратор", "кoнфиг", "kфг"
     ]
+
     def __init__(self):
         self.last_sent = {}  # Словарь для отслеживания времени последней отправки сообщения каждому пользователю
         self.spam_warned = {}  # Словарь для отслеживания предупреждений пользователей
+
     async def client_ready(self, client, db):
         self.client = client
         self.me = await client.get_me()  # Получаем информацию о себе
+
     async def watcher(self, message: Message):
         if message.is_private and message.sender_id != self.me.id:  # Проверяем, что сообщение не от самого себя
             for keyword in self.keywords:
@@ -33,24 +40,32 @@ class yMenuMod(loader.Module):
                     if message.sender_id not in self.last_sent or now - self.last_sent[message.sender_id] > self.strings["spam_wait_time"]:
                         self.last_sent[message.sender_id] = now
                         self.spam_warned.pop(message.sender_id, None)  # Сбрасываем предупреждение при успешной отправке
+                        
+                        # Отправляем конфиг-сообщение
                         await message.reply(self.strings["config_response"])
-                        # Пересылаем сообщение
+
+                        # Пересылаем сообщение с конфигом
                         await self.client(ForwardMessagesRequest(
                             from_peer=self.strings["file_chat_id"],
                             id=[self.strings["file_message_id"]],
                             to_peer=message.chat_id,
                             with_my_score=False
                         ))
+
+                        # Отправляем сообщение с благодарностью и ссылкой на поддержку
+                        await message.reply(self.strings["support_message"])
                     else:
                         if message.sender_id not in self.spam_warned:
                             self.spam_warned[message.sender_id] = True
                             await message.reply(self.strings["spam_warning"])
                         logger.info(f"Spam protection: Ignored message from {message.sender_id}")
-                    # Отправляем подтверждение о прочтении/
+
+                    # Отправляем подтверждение о прочтении
                     await message.client.send_read_acknowledge(
                         message.chat_id, clear_mentions=True
                     )
                     break
+
     @loader.command()
     async def meta(self, message: Message):
         """мета команда"""
