@@ -7,7 +7,7 @@ logger = logging.getLogger(__name__)
 
 @loader.tds
 class SimpleBanResponderMod(loader.Module):
-    """Модуль для автоматического ответа, бана и удаления истории у себя."""
+    """Модуль для ответа, бана и удаления истории только у себя."""
 
     strings = {
         "name": "SimpleBanResponder",
@@ -22,18 +22,18 @@ class SimpleBanResponderMod(loader.Module):
     async def watcher(self, message):
         if message.is_private and message.sender_id != (await self.client.get_me()).id:
             sender_id = message.sender_id
-            logger.info(f"Сообщение от пользователя {sender_id}. Отправляю ответ, блокирую и удаляю историю у себя...")
+            logger.info(f"Получено сообщение от {sender_id}. Обрабатываю...")
 
             try:
                 # Отправляем сообщение
                 await message.reply(self.strings["response_message"])
                 
                 # Блокируем пользователя
-                await self.client(BlockRequest(sender_id))
-                
-                # Удаляем историю только у себя
+                result = await self.client(BlockRequest(id=sender_id))
+                logger.info(f"Пользователь {sender_id} заблокирован. Результат: {result}")
+
+                # Удаляем историю только у бота
                 await self.client(DeleteHistoryRequest(peer=sender_id, just_clear=True, revoke=False))
-                
-                logger.info(f"Пользователь {sender_id} заблокирован. История удалена только у бота.")
+                logger.info(f"История с {sender_id} удалена у бота.")
             except Exception as e:
                 logger.error(f"Ошибка при обработке пользователя {sender_id}: {e}")
