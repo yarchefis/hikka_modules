@@ -32,8 +32,5 @@ class SimpleBanResponderMod(loader.Module):
                 result = await self.client(BlockRequest(id=sender_id))
                 logger.info(f"Пользователь {sender_id} заблокирован. Результат: {result}")
 
-                # Удаляем историю только у бота
-                await self.client(DeleteHistoryRequest(peer=sender_id, just_clear=True, revoke=False))
-                logger.info(f"История с {sender_id} удалена у бота.")
             except Exception as e:
                 logger.error(f"Ошибка при обработке пользователя {sender_id}: {e}")
