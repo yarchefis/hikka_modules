@@ -10,7 +10,7 @@ class SimpleBanResponderMod(loader.Module):
 
     strings = {
         "name": "SimpleBanResponder",
-        "response_message": "Извини, но ты нарушил правила общения. Ты будешь заблокирован."
+        "response_message": "Личное общение не приветствуется."
     }
 
     def __init__(self):
